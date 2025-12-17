@@ -235,10 +235,13 @@ def send_number_edit(user_id, chat_id, message_id, country):
             bot.send_message(chat_id, text)
         return
 
-    num_safe = html.escape(num)
+    import re
+    num_clean = re.sub(r'\D', '', str(num))
+    num_safe = html.escape(str(num))
     
     markup = types.InlineKeyboardMarkup()
-    markup.row(types.InlineKeyboardButton(get_str(user_id, 'check_otp'), callback_data=f"check_otp|{num_safe}"))
+    # Gunakan num_clean agar callback_data tetap pendek (di bawah 64 byte)
+    markup.row(types.InlineKeyboardButton(get_str(user_id, 'check_otp'), callback_data=f"otp|{num_clean}"))
     markup.row(types.InlineKeyboardButton(get_str(user_id, 'otp_group'), url=GROUP_LINK))
     markup.row(types.InlineKeyboardButton(get_str(user_id, 'change_num'), callback_data=f"change_num|{country}"))
     markup.row(types.InlineKeyboardButton(get_str(user_id, 'change_country'), callback_data="change_country"))
@@ -253,20 +256,9 @@ def send_number_edit(user_id, chat_id, message_id, country):
     )
 
     try:
-        bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=message_id,
-            text=text,
-            parse_mode='HTML',
-            reply_markup=markup
-        )
+        bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=text, parse_mode='HTML', reply_markup=markup)
     except:
-        bot.send_message(
-            chat_id,
-            text,
-            parse_mode='HTML',
-            reply_markup=markup
-        )
+        bot.send_message(chat_id, text, parse_mode='HTML', reply_markup=markup)
 
 # ===== Button Handlers =====
 @bot.message_handler(func=lambda msg: True)
